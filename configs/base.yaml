@@ -1,0 +1,18 @@
+
+project:
+  name: "playtest-pulse"
+  version: "0.1.0"
+  seed: 42
+
+data:
+  raw_events_path: "data/raw/sample_events.csv"
+  processed_database_path: "data/processed/telemetry.sqlite3"
+
+generation:
+  player_count: 100
+  min_sessions_per_player: 1
+  max_sessions_per_player: 5
+  level_count: 8
+
+dashboard:
+  title: "Playtest Pulse"

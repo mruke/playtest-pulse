@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local generated data
+data/raw/*.csv
+data/processed/*.db
+data/processed/*.sqlite
+data/processed/*.sqlite3
+
+# Keep data folders
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/

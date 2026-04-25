@@ -1,0 +1,21 @@
+
+[project]
+name = "playtest-pulse"
+version = "0.1.0"
+description = "A small Python analytics dashboard for simulated game playtest telemetry."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas",
+    "streamlit",
+    "PyYAML",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -29,6 +29,19 @@ The first version will include:
 - unit, integration, and end-to-end tests
 - architecture documentation and ADRs
 
+## Implementation Steps
+
+The project will be built in small, focused steps. Each step should leave the repository in a working state and add one clear piece of functionality.
+
+| Step | Focus Area | Goal | Status |
+|---|---|---|---|
+| 1 | Sample data generation | Generate deterministic simulated playtest telemetry as CSV data. | Planned |
+| 2 | Data loading and validation | Load telemetry CSV files and reject invalid or malformed event rows. | Planned |
+| 3 | Analytics metrics | Calculate player, session, level, combat, and item usage metrics. | Planned |
+| 4 | Dashboard | Display gameplay insights in a small Streamlit dashboard. | Planned |
+| 5 | Local storage | Persist cleaned telemetry data in SQLite and query it for analysis. | Planned |
+| 6 | Documentation and polish | Add usage docs, architecture notes, ADRs, tests documentation, and final cleanup. | Planned |
+
 ## Tech Stack
 
 - Python

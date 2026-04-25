@@ -54,3 +54,12 @@ The project will be built in small, focused steps. Each step should leave the re
 
 Planned.
 
+## Future Extensions
+
+Possible follow-up work after the first version:
+
+- Add SQLite persistence using Python's built-in `sqlite3` module for local telemetry storage.
+- Evaluate SQLAlchemy if the storage layer grows beyond simple local tables and queries.
+- Explore a PySide6 desktop dashboard if the project becomes more focused on local desktop tooling.
+- Add real-time telemetry ingestion later if the project needs to simulate live game events.
+

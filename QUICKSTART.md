@@ -2,7 +2,7 @@
 
 This guide explains how to run **Playtest Pulse** locally.
 
-The project generates simulated playtest telemetry, loads the generated CSV data, calculates gameplay metrics, and displays the results in a Streamlit dashboard.
+The project generates simulated playtest telemetry, loads the generated CSV data into SQLite, calculates gameplay metrics, and displays the results in a Streamlit dashboard.
 
 ## 1. Create a virtual environment
 
@@ -36,11 +36,13 @@ The generated CSV is ignored by Git.
 
 Persist the generated telemetry CSV into local SQLite storage:
 
-    python scripts/ingest_events.py --config configs/base.yaml
+    python scripts/ingest_events.py --config configs/base.yaml --replace
 
 This writes a SQLite database to:
 
     data/processed/telemetry.sqlite3
+
+The `--replace` flag makes the workflow repeatable by replacing the existing local database before ingestion.
 
 ## 5. Run the dashboard
 
@@ -66,4 +68,9 @@ Run the full test suite:
 
 ## Notes
 
-The first version uses generated sample data and local files. SQLite storage, SQLAlchemy evaluation, real-time event ingestion, and a possible PySide6 desktop dashboard are future extension ideas rather than part of the first dashboard slice.
+Generated local files are ignored by Git:
+
+    data/raw/sample_events.csv
+    data/processed/telemetry.sqlite3
+
+The first version uses generated sample data, local SQLite storage, pandas analytics, and a Streamlit dashboard.

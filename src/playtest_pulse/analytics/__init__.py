@@ -5,6 +5,7 @@ from playtest_pulse.analytics.combat_metrics import (
     summarize_combat,
 )
 from playtest_pulse.analytics.event_frame import events_to_frame
+from playtest_pulse.analytics.frame_validation import require_columns
 from playtest_pulse.analytics.item_metrics import (
     calculate_item_pickups,
     count_total_item_pickups,
@@ -39,6 +40,7 @@ __all__ = [
     "count_total_sessions",
     "events_to_frame",
     "get_most_picked_up_item",
+    "require_columns",
     "summarize_combat",
     "summarize_level_performance",
     "summarize_sessions",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from playtest_pulse.analytics.frame_validation import require_columns
 from playtest_pulse.domain import EventTypes
 
 
@@ -11,7 +12,7 @@ from playtest_pulse.domain import EventTypes
 # Counts player death events by level.
 # ---------------------------------------------------------------------------
 def calculate_deaths_by_level(events: pd.DataFrame) -> pd.DataFrame:
-    _require_columns(events, ["event_type", "level_id"])
+    require_columns(events, ["event_type", "level_id"])
 
     deaths = events[events["event_type"] == EventTypes.PLAYER_DEATH]
     deaths = deaths.dropna(subset=["level_id"])
@@ -33,7 +34,7 @@ def calculate_deaths_by_level(events: pd.DataFrame) -> pd.DataFrame:
 # Counts enemy defeated events by enemy type.
 # ---------------------------------------------------------------------------
 def calculate_enemy_defeats(events: pd.DataFrame) -> pd.DataFrame:
-    _require_columns(events, ["event_type", "enemy_type"])
+    require_columns(events, ["event_type", "enemy_type"])
 
     defeats = events[events["event_type"] == EventTypes.ENEMY_DEFEATED]
     defeats = defeats.dropna(subset=["enemy_type"])
@@ -55,7 +56,7 @@ def calculate_enemy_defeats(events: pd.DataFrame) -> pd.DataFrame:
 # Calculates average damage taken by level from combat-related events.
 # ---------------------------------------------------------------------------
 def calculate_average_damage_taken_by_level(events: pd.DataFrame) -> pd.DataFrame:
-    _require_columns(events, ["event_type", "level_id", "damage_taken"])
+    require_columns(events, ["event_type", "level_id", "damage_taken"])
 
     combat_events = events[
         events["event_type"].isin(
@@ -84,7 +85,7 @@ def calculate_average_damage_taken_by_level(events: pd.DataFrame) -> pd.DataFram
 # Builds a compact summary of combat metrics.
 # ---------------------------------------------------------------------------
 def summarize_combat(events: pd.DataFrame) -> dict[str, int]:
-    _require_columns(events, ["event_type"])
+    require_columns(events, ["event_type"])
 
     death_count = int((events["event_type"] == EventTypes.PLAYER_DEATH).sum())
     enemy_defeat_count = int((events["event_type"] == EventTypes.ENEMY_DEFEATED).sum())
@@ -93,16 +94,3 @@ def summarize_combat(events: pd.DataFrame) -> dict[str, int]:
         "player_deaths": death_count,
         "enemy_defeats": enemy_defeat_count,
     }
-
-
-# ---------------------------------------------------------------------------
-# _require_columns
-#
-# Verifies that the DataFrame contains the columns needed by a metric.
-# ---------------------------------------------------------------------------
-def _require_columns(events: pd.DataFrame, columns: list[str]) -> None:
-    missing_columns = [column for column in columns if column not in events.columns]
-
-    if missing_columns:
-        joined_columns = ", ".join(missing_columns)
-        raise ValueError(f"events DataFrame is missing columns: {joined_columns}")

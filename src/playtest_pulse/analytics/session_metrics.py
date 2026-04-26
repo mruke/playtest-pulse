@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from playtest_pulse.analytics.frame_validation import require_columns
 from playtest_pulse.domain import EventTypes
 
 
@@ -11,7 +12,7 @@ from playtest_pulse.domain import EventTypes
 # Counts the number of unique sessions in the telemetry event data.
 # ---------------------------------------------------------------------------
 def count_total_sessions(events: pd.DataFrame) -> int:
-    _require_columns(events, ["session_id"])
+    require_columns(events, ["session_id"])
 
     return int(events["session_id"].nunique())
 
@@ -22,7 +23,7 @@ def count_total_sessions(events: pd.DataFrame) -> int:
 # Counts the number of unique players in the telemetry event data.
 # ---------------------------------------------------------------------------
 def count_total_players(events: pd.DataFrame) -> int:
-    _require_columns(events, ["player_id"])
+    require_columns(events, ["player_id"])
 
     return int(events["player_id"].nunique())
 
@@ -33,7 +34,7 @@ def count_total_players(events: pd.DataFrame) -> int:
 # Calculates the average duration from session_end events.
 # ---------------------------------------------------------------------------
 def calculate_average_session_duration(events: pd.DataFrame) -> float:
-    _require_columns(events, ["event_type", "duration_seconds"])
+    require_columns(events, ["event_type", "duration_seconds"])
 
     session_end_events = events[events["event_type"] == EventTypes.SESSION_END]
 
@@ -54,7 +55,7 @@ def calculate_average_session_duration(events: pd.DataFrame) -> float:
 # Counts players who have more than one session.
 # ---------------------------------------------------------------------------
 def count_returning_players(events: pd.DataFrame) -> int:
-    _require_columns(events, ["player_id", "session_id"])
+    require_columns(events, ["player_id", "session_id"])
 
     sessions_by_player = events.groupby("player_id")["session_id"].nunique()
     returning_players = sessions_by_player[sessions_by_player > 1]
@@ -74,16 +75,3 @@ def summarize_sessions(events: pd.DataFrame) -> dict[str, int | float]:
         "returning_players": count_returning_players(events),
         "average_session_duration_seconds": calculate_average_session_duration(events),
     }
-
-
-# ---------------------------------------------------------------------------
-# _require_columns
-#
-# Verifies that the DataFrame contains the columns needed by a metric.
-# ---------------------------------------------------------------------------
-def _require_columns(events: pd.DataFrame, columns: list[str]) -> None:
-    missing_columns = [column for column in columns if column not in events.columns]
-
-    if missing_columns:
-        joined_columns = ", ".join(missing_columns)
-        raise ValueError(f"events DataFrame is missing columns: {joined_columns}")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from playtest_pulse.analytics.frame_validation import require_columns
 from playtest_pulse.domain import EventTypes
 
 
@@ -11,7 +12,7 @@ from playtest_pulse.domain import EventTypes
 # Counts level_start events by level.
 # ---------------------------------------------------------------------------
 def calculate_level_attempts(events: pd.DataFrame) -> pd.DataFrame:
-    _require_columns(events, ["event_type", "level_id"])
+    require_columns(events, ["event_type", "level_id"])
 
     level_starts = events[events["event_type"] == EventTypes.LEVEL_START]
     level_starts = level_starts.dropna(subset=["level_id"])
@@ -28,7 +29,7 @@ def calculate_level_attempts(events: pd.DataFrame) -> pd.DataFrame:
 # Counts level completion and failure events by level.
 # ---------------------------------------------------------------------------
 def calculate_level_outcomes(events: pd.DataFrame) -> pd.DataFrame:
-    _require_columns(events, ["event_type", "level_id"])
+    require_columns(events, ["event_type", "level_id"])
 
     level_outcomes = events[
         events["event_type"].isin(
@@ -164,16 +165,3 @@ def _count_by_level(
         .reset_index(name=count_column_name)
         .sort_values("level_id", ignore_index=True)
     )
-
-
-# ---------------------------------------------------------------------------
-# _require_columns
-#
-# Verifies that the DataFrame contains the columns needed by a metric.
-# ---------------------------------------------------------------------------
-def _require_columns(events: pd.DataFrame, columns: list[str]) -> None:
-    missing_columns = [column for column in columns if column not in events.columns]
-
-    if missing_columns:
-        joined_columns = ", ".join(missing_columns)
-        raise ValueError(f"events DataFrame is missing columns: {joined_columns}")

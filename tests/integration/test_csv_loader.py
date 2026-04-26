@@ -19,20 +19,6 @@ from playtest_pulse.domain import RAW_EVENT_COLUMNS
 # ---------------------------------------------------------------------------
 def _write_rows(tmp_path: Path, rows: list[dict[str, object]]) -> Path:
     csv_path = tmp_path / "events.csv"
-    fieldnames = [
-        "event_id",
-        "player_id",
-        "session_id",
-        "timestamp",
-        "event_type",
-        "level_id",
-        "enemy_type",
-        "item_id",
-        "duration_seconds",
-        "damage_taken",
-        "result",
-    ]
-
     with csv_path.open("w", encoding="utf-8", newline="") as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=RAW_EVENT_COLUMNS)
         writer.writeheader()

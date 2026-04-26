@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 import sqlite3
 
+import pandas as pd
+
 from playtest_pulse.domain import EventTypes, TelemetryEvent
 from playtest_pulse.storage.schema import initialize_schema
 
@@ -10,7 +12,7 @@ from playtest_pulse.storage.schema import initialize_schema
 # ---------------------------------------------------------------------------
 # TelemetryRepository
 #
-# Stores validated telemetry events in normalized SQLite tables.
+# Stores and queries validated telemetry events in normalized SQLite tables.
 # ---------------------------------------------------------------------------
 class TelemetryRepository:
     # -----------------------------------------------------------------------
@@ -46,6 +48,52 @@ class TelemetryRepository:
             self._insert_event(event)
 
         self.connection.commit()
+
+    # -----------------------------------------------------------------------
+    # fetch_events_frame
+    #
+    # Returns stored telemetry events as a pandas DataFrame for analytics.
+    # -----------------------------------------------------------------------
+    def fetch_events_frame(self) -> pd.DataFrame:
+        query = """
+        SELECT
+            events.event_id,
+            events.player_id,
+            events.session_id,
+            events.timestamp,
+            events.event_type,
+            level_events.level_id,
+            combat_events.enemy_type,
+            item_events.item_id,
+            level_events.duration_seconds,
+            combat_events.damage_taken,
+            COALESCE(level_events.result, combat_events.result) AS result
+        FROM events
+        LEFT JOIN level_events
+            ON events.event_id = level_events.event_id
+        LEFT JOIN combat_events
+            ON events.event_id = combat_events.event_id
+        LEFT JOIN item_events
+            ON events.event_id = item_events.event_id
+        ORDER BY events.timestamp, events.event_id;
+        """
+
+        frame = pd.read_sql_query(query, self.connection)
+        frame["timestamp"] = pd.to_datetime(frame["timestamp"], errors="raise")
+
+        return frame
+
+    # -----------------------------------------------------------------------
+    # count_events
+    #
+    # Counts rows in the base events table.
+    # -----------------------------------------------------------------------
+    def count_events(self) -> int:
+        row = self.connection.execute(
+            "SELECT COUNT(*) AS count FROM events;"
+        ).fetchone()
+
+        return int(row["count"])
 
     # -----------------------------------------------------------------------
     # _insert_event

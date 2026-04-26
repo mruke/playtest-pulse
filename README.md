@@ -135,3 +135,6 @@ This project is licensed under the MIT License. See [`LICENSE`](LICENSE) for det
 
 Version 0.1.0 complete. The first local prototype is finished.
 
+## AI Assistance Disclosure
+
+ChatGPT was used during development as a learning, design, and review assistant. It helped with project planning, architecture discussion, documentation drafting, implementation review, and test-suite design. Some tests were generated with ChatGPT assistance and then reviewed, adapted, and validated as part of this repository.

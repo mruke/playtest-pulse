@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from playtest_pulse.analytics.event_frame import events_to_frame
-from playtest_pulse.domain import EventTypes, RAW_EVENT_COLUMNS, TelemetryEvent
+from playtest_pulse.domain import EventTypes, RAW_EVENT_COLUMNS
 from tests.helpers.event_factories import make_event
 
 

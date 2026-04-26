@@ -32,7 +32,17 @@ This writes a CSV file to:
 
 The generated CSV is ignored by Git.
 
-## 4. Run the dashboard
+## 4. Load telemetry into SQLite
+
+Persist the generated telemetry CSV into local SQLite storage:
+
+    python scripts/ingest_events.py --config configs/base.yaml
+
+This writes a SQLite database to:
+
+    data/processed/telemetry.sqlite3
+
+## 5. Run the dashboard
 
 Start the Streamlit dashboard:
 
@@ -48,7 +58,7 @@ The dashboard shows:
 - item pickup counts
 - raw event data
 
-## 5. Run tests
+## 6. Run tests
 
 Run the full test suite:
 

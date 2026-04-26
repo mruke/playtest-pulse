@@ -56,7 +56,7 @@ The project is built in small, focused steps. Each step leaves the repository in
 | 3 | Analytics metrics | Calculate player, session, level, combat, and item usage metrics. | Complete |
 | 4 | Dashboard | Display gameplay insights in a small Streamlit dashboard. | Complete |
 | 5 | Local storage | Persist cleaned telemetry data in SQLite and query it for analysis. | Complete |
-| 6 | Documentation and polish | Add usage docs, architecture notes, ADRs, tests documentation, and final cleanup. | In Progress |
+| 6 | Documentation and polish | Add usage docs, architecture notes, ADRs, tests documentation, and final cleanup. | Complete |
 
 ## Tech Stack
 
@@ -133,5 +133,5 @@ This project is licensed under the MIT License. See [`LICENSE`](LICENSE) for det
 
 ## Project Status
 
-Working local prototype. Documentation and polish are in progress.
+Version 0.1.0 complete. The first local prototype is finished.
 

@@ -65,10 +65,15 @@ class TelemetryRepository:
             level_events.level_id,
             combat_events.enemy_type,
             item_events.item_id,
-            level_events.duration_seconds,
+            COALESCE(
+                session_events.duration_seconds,
+                level_events.duration_seconds
+            ) AS duration_seconds,
             combat_events.damage_taken,
             COALESCE(level_events.result, combat_events.result) AS result
         FROM events
+        LEFT JOIN session_events
+            ON events.event_id = session_events.event_id
         LEFT JOIN level_events
             ON events.event_id = level_events.event_id
         LEFT JOIN combat_events
@@ -121,6 +126,9 @@ class TelemetryRepository:
             ),
         )
 
+        if event.event_type == EventTypes.SESSION_END:
+            self._insert_session_event(event)
+
         if event.event_type in _LEVEL_EVENT_TYPES:
             self._insert_level_event(event)
 
@@ -129,6 +137,26 @@ class TelemetryRepository:
 
         if event.event_type == EventTypes.ITEM_PICKUP:
             self._insert_item_event(event)
+
+    # -----------------------------------------------------------------------
+    # _insert_session_event
+    #
+    # Inserts session-specific fields for session end events.
+    # -----------------------------------------------------------------------
+    def _insert_session_event(self, event: TelemetryEvent) -> None:
+        self.connection.execute(
+            """
+            INSERT INTO session_events (
+                event_id,
+                duration_seconds
+            )
+            VALUES (?, ?);
+            """,
+            (
+                event.event_id,
+                event.duration_seconds,
+            ),
+        )
 
     # -----------------------------------------------------------------------
     # _insert_level_event

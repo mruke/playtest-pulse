@@ -13,6 +13,14 @@ CREATE TABLE IF NOT EXISTS events (
 );
 """
 
+CREATE_SESSION_EVENTS_TABLE = """
+CREATE TABLE IF NOT EXISTS session_events (
+    event_id TEXT PRIMARY KEY,
+    duration_seconds INTEGER,
+    FOREIGN KEY (event_id) REFERENCES events(event_id)
+);
+"""
+
 CREATE_LEVEL_EVENTS_TABLE = """
 CREATE TABLE IF NOT EXISTS level_events (
     event_id TEXT PRIMARY KEY,
@@ -43,6 +51,7 @@ CREATE TABLE IF NOT EXISTS item_events (
 
 TABLE_NAMES = [
     "events",
+    "session_events",
     "level_events",
     "combat_events",
     "item_events",
@@ -57,6 +66,7 @@ TABLE_NAMES = [
 def initialize_schema(connection: sqlite3.Connection) -> None:
     connection.execute("PRAGMA foreign_keys = ON;")
     connection.execute(CREATE_EVENTS_TABLE)
+    connection.execute(CREATE_SESSION_EVENTS_TABLE)
     connection.execute(CREATE_LEVEL_EVENTS_TABLE)
     connection.execute(CREATE_COMBAT_EVENTS_TABLE)
     connection.execute(CREATE_ITEM_EVENTS_TABLE)

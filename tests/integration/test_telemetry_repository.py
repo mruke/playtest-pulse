@@ -308,3 +308,56 @@ def test_fetch_events_frame_returns_expected_columns(tmp_path: Path) -> None:
         "damage_taken",
         "result",
     ]
+
+
+# ---------------------------------------------------------------------------
+# test_insert_events_writes_session_event_details
+#
+# Verifies that session end events write session duration details.
+# ---------------------------------------------------------------------------
+def test_insert_events_writes_session_event_details(tmp_path: Path) -> None:
+    repository = _repository(tmp_path)
+
+    repository.insert_events(
+        [
+            _event(
+                event_id="event-001",
+                event_type=EventTypes.SESSION_END,
+                duration_seconds=300,
+            )
+        ]
+    )
+
+    row = repository.connection.execute(
+        "SELECT event_id, duration_seconds FROM session_events;"
+    ).fetchone()
+    repository.close()
+
+    assert dict(row) == {
+        "event_id": "event-001",
+        "duration_seconds": 300,
+    }
+
+
+# ---------------------------------------------------------------------------
+# test_fetch_events_frame_preserves_session_duration
+#
+# Verifies that fetched DataFrames include session end duration values.
+# ---------------------------------------------------------------------------
+def test_fetch_events_frame_preserves_session_duration(tmp_path: Path) -> None:
+    repository = _repository(tmp_path)
+
+    repository.insert_events(
+        [
+            _event(
+                event_id="event-001",
+                event_type=EventTypes.SESSION_END,
+                duration_seconds=300,
+            )
+        ]
+    )
+
+    frame = repository.fetch_events_frame()
+    repository.close()
+
+    assert frame.loc[0, "duration_seconds"] == 300

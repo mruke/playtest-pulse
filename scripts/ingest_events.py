@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 from playtest_pulse.config import load_config
 from playtest_pulse.ingestion import load_events_csv
@@ -17,7 +18,12 @@ def main() -> None:
     config = load_config(args.config)
 
     events = load_events_csv(config.data.raw_events_path)
-    repository = TelemetryRepository(config.data.processed_database_path)
+    database_path = Path(config.data.processed_database_path)
+
+    if args.replace and database_path.exists():
+        database_path.unlink()
+
+    repository = TelemetryRepository(database_path)
 
     try:
         repository.insert_events(events)
@@ -27,7 +33,7 @@ def main() -> None:
 
     print(
         "Stored "
-        f"{len(events)} events in {config.data.processed_database_path}. "
+        f"{len(events)} events in {database_path}. "
         f"Database now contains {event_count} events."
     )
 
@@ -45,6 +51,11 @@ def _parse_args() -> argparse.Namespace:
         "--config",
         default="configs/base.yaml",
         help="Path to the YAML config file.",
+    )
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Replace the existing SQLite database before ingesting events.",
     )
 
     return parser.parse_args()

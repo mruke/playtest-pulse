@@ -10,14 +10,13 @@ from playtest_pulse.analytics import (
     calculate_deaths_by_level,
     calculate_enemy_defeats,
     calculate_item_pickups,
-    events_to_frame,
     get_most_picked_up_item,
     summarize_combat,
     summarize_level_performance,
     summarize_sessions,
 )
 from playtest_pulse.config import AppConfig
-from playtest_pulse.ingestion import load_events_csv
+from playtest_pulse.storage import TelemetryRepository
 
 
 # ---------------------------------------------------------------------------
@@ -41,19 +40,26 @@ class DashboardData:
 # ---------------------------------------------------------------------------
 # load_dashboard_data
 #
-# Loads telemetry events from config and prepares dashboard metrics.
+# Loads telemetry events from SQLite storage and prepares dashboard metrics.
 # ---------------------------------------------------------------------------
 def load_dashboard_data(config: AppConfig) -> DashboardData:
-    events_path = Path(config.data.raw_events_path)
+    database_path = Path(config.data.processed_database_path)
 
-    if not events_path.is_file():
+    if not database_path.is_file():
         raise FileNotFoundError(
-            f"Telemetry CSV file does not exist: {events_path}. "
-            "Generate sample data before running the dashboard."
+            f"Telemetry database does not exist: {database_path}. "
+            "Generate sample data and run storage ingestion before opening the dashboard."
         )
 
-    telemetry_events = load_events_csv(events_path)
-    event_frame = events_to_frame(telemetry_events)
+    repository = TelemetryRepository(database_path)
+
+    try:
+        event_frame = repository.fetch_events_frame()
+    finally:
+        repository.close()
+
+    if event_frame.empty:
+        raise ValueError("Telemetry database does not contain any events.")
 
     return DashboardData(
         raw_events=event_frame,

@@ -4,7 +4,7 @@ from playtest_pulse.analytics.combat_metrics import (
     calculate_enemy_defeats,
     summarize_combat,
 )
-from playtest_pulse.analytics.event_frame import EVENT_FRAME_COLUMNS, events_to_frame
+from playtest_pulse.analytics.event_frame import events_to_frame
 from playtest_pulse.analytics.item_metrics import (
     calculate_item_pickups,
     count_total_item_pickups,
@@ -22,9 +22,10 @@ from playtest_pulse.analytics.session_metrics import (
     count_total_sessions,
     summarize_sessions,
 )
+from playtest_pulse.domain import RAW_EVENT_COLUMNS
 
 __all__ = [
-    "EVENT_FRAME_COLUMNS",
+    "RAW_EVENT_COLUMNS",
     "calculate_average_damage_taken_by_level",
     "calculate_average_session_duration",
     "calculate_deaths_by_level",

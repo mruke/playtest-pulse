@@ -3,7 +3,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from playtest_pulse.analytics.event_frame import EVENT_FRAME_COLUMNS, events_to_frame
+from playtest_pulse.analytics.event_frame import events_to_frame
+from playtest_pulse.domain import RAW_EVENT_COLUMNS
 from playtest_pulse.domain import EventTypes, TelemetryEvent
 
 
@@ -51,7 +52,7 @@ def test_events_to_frame_returns_dataframe() -> None:
 def test_events_to_frame_includes_expected_columns() -> None:
     frame = events_to_frame([_event()])
 
-    assert list(frame.columns) == EVENT_FRAME_COLUMNS
+    assert list(frame.columns) == RAW_EVENT_COLUMNS
 
 
 # ---------------------------------------------------------------------------

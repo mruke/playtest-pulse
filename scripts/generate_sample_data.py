@@ -6,7 +6,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from playtest_pulse.config import load_config
-from playtest_pulse.domain import TelemetryEvent
+from playtest_pulse.domain import RAW_EVENT_COLUMNS, TelemetryEvent
 from playtest_pulse.ingestion import generate_sample_events
 
 
@@ -59,22 +59,8 @@ def _write_events_csv(
 ) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fieldnames = [
-        "event_id",
-        "player_id",
-        "session_id",
-        "timestamp",
-        "event_type",
-        "level_id",
-        "enemy_type",
-        "item_id",
-        "duration_seconds",
-        "damage_taken",
-        "result",
-    ]
-
     with output_path.open("w", encoding="utf-8", newline="") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames=RAW_EVENT_COLUMNS)
         writer.writeheader()
 
         for event in events:

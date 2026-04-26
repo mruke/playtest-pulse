@@ -29,7 +29,8 @@ def render_dashboard(config_path: str | Path) -> None:
     except FileNotFoundError as error:
         st.error(str(error))
         st.info(
-            "Run `python scripts/generate_sample_data.py` before opening the dashboard."
+            "Run `python scripts/generate_sample_data.py` and "
+            "`python scripts/ingest_events.py --replace` before opening the dashboard."
         )
         return
 
@@ -81,7 +82,7 @@ def _render_level_section(dashboard_data: DashboardData) -> None:
         st.info("No level performance data available.")
         return
 
-    st.dataframe(level_performance, use_container_width=True)
+    st.dataframe(level_performance, width="stretch")
 
     chart_data = level_performance.set_index("level_id")[
         [
@@ -166,7 +167,7 @@ def _render_raw_events_section(dashboard_data: DashboardData) -> None:
     with st.expander("Raw Events"):
         st.dataframe(
             dashboard_data.raw_events,
-            use_container_width=True,
+            width="stretch",
         )
 
 
@@ -180,4 +181,4 @@ def _render_table_or_info(frame: pd.DataFrame, empty_message: str) -> None:
         st.info(empty_message)
         return
 
-    st.dataframe(frame, use_container_width=True)
+    st.dataframe(frame, width="stretch")

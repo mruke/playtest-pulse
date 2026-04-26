@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import csv
-from dataclasses import asdict
 from pathlib import Path
 
 import pandas as pd
@@ -16,14 +14,15 @@ from playtest_pulse.config import (
 )
 from playtest_pulse.dashboard import DashboardData, load_dashboard_data
 from playtest_pulse.ingestion import generate_sample_events
+from playtest_pulse.storage import TelemetryRepository
 
 
 # ---------------------------------------------------------------------------
-# _write_sample_events
+# _write_sample_database
 #
-# Writes generated sample telemetry events to a temporary CSV file.
+# Writes generated sample telemetry events to a temporary SQLite database.
 # ---------------------------------------------------------------------------
-def _write_sample_events(tmp_path: Path) -> Path:
+def _write_sample_database(tmp_path: Path) -> Path:
     events = generate_sample_events(
         project_config=ProjectConfig(
             name="playtest-pulse",
@@ -38,37 +37,23 @@ def _write_sample_events(tmp_path: Path) -> Path:
         ),
     )
 
-    csv_path = tmp_path / "sample_events.csv"
-    fieldnames = [
-        "event_id",
-        "player_id",
-        "session_id",
-        "timestamp",
-        "event_type",
-        "level_id",
-        "enemy_type",
-        "item_id",
-        "duration_seconds",
-        "damage_taken",
-        "result",
-    ]
+    database_path = tmp_path / "telemetry.sqlite3"
+    repository = TelemetryRepository(database_path)
 
-    with csv_path.open("w", encoding="utf-8", newline="") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
+    try:
+        repository.insert_events(events)
+    finally:
+        repository.close()
 
-        for event in events:
-            writer.writerow(asdict(event))
-
-    return csv_path
+    return database_path
 
 
 # ---------------------------------------------------------------------------
 # _app_config
 #
-# Builds a small app config that points to a temporary telemetry CSV file.
+# Builds a small app config that points to a temporary SQLite database.
 # ---------------------------------------------------------------------------
-def _app_config(csv_path: Path) -> AppConfig:
+def _app_config(database_path: Path) -> AppConfig:
     return AppConfig(
         project=ProjectConfig(
             name="playtest-pulse",
@@ -76,8 +61,8 @@ def _app_config(csv_path: Path) -> AppConfig:
             seed=42,
         ),
         data=DataConfig(
-            raw_events_path=str(csv_path),
-            processed_database_path="unused.sqlite3",
+            raw_events_path="unused.csv",
+            processed_database_path=str(database_path),
         ),
         generation=GenerationConfig(
             player_count=5,
@@ -97,9 +82,9 @@ def _app_config(csv_path: Path) -> AppConfig:
 # Verifies that dashboard data loading returns the expected data object.
 # ---------------------------------------------------------------------------
 def test_load_dashboard_data_returns_dashboard_data(tmp_path: Path) -> None:
-    csv_path = _write_sample_events(tmp_path)
+    database_path = _write_sample_database(tmp_path)
 
-    dashboard_data = load_dashboard_data(_app_config(csv_path))
+    dashboard_data = load_dashboard_data(_app_config(database_path))
 
     assert isinstance(dashboard_data, DashboardData)
 
@@ -110,9 +95,9 @@ def test_load_dashboard_data_returns_dashboard_data(tmp_path: Path) -> None:
 # Verifies that loaded dashboard data includes a raw events DataFrame.
 # ---------------------------------------------------------------------------
 def test_load_dashboard_data_includes_raw_events_frame(tmp_path: Path) -> None:
-    csv_path = _write_sample_events(tmp_path)
+    database_path = _write_sample_database(tmp_path)
 
-    dashboard_data = load_dashboard_data(_app_config(csv_path))
+    dashboard_data = load_dashboard_data(_app_config(database_path))
 
     assert isinstance(dashboard_data.raw_events, pd.DataFrame)
     assert not dashboard_data.raw_events.empty
@@ -124,9 +109,9 @@ def test_load_dashboard_data_includes_raw_events_frame(tmp_path: Path) -> None:
 # Verifies that dashboard data includes session-level summary metrics.
 # ---------------------------------------------------------------------------
 def test_load_dashboard_data_includes_session_summary(tmp_path: Path) -> None:
-    csv_path = _write_sample_events(tmp_path)
+    database_path = _write_sample_database(tmp_path)
 
-    dashboard_data = load_dashboard_data(_app_config(csv_path))
+    dashboard_data = load_dashboard_data(_app_config(database_path))
 
     assert dashboard_data.session_summary["total_players"] == 5
     assert dashboard_data.session_summary["total_sessions"] >= 5
@@ -139,9 +124,9 @@ def test_load_dashboard_data_includes_session_summary(tmp_path: Path) -> None:
 # Verifies that dashboard data includes the main metric tables.
 # ---------------------------------------------------------------------------
 def test_load_dashboard_data_includes_metric_tables(tmp_path: Path) -> None:
-    csv_path = _write_sample_events(tmp_path)
+    database_path = _write_sample_database(tmp_path)
 
-    dashboard_data = load_dashboard_data(_app_config(csv_path))
+    dashboard_data = load_dashboard_data(_app_config(database_path))
 
     assert not dashboard_data.level_performance.empty
     assert isinstance(dashboard_data.deaths_by_level, pd.DataFrame)
@@ -158,9 +143,9 @@ def test_load_dashboard_data_includes_metric_tables(tmp_path: Path) -> None:
 def test_load_dashboard_data_includes_combat_and_item_summaries(
     tmp_path: Path,
 ) -> None:
-    csv_path = _write_sample_events(tmp_path)
+    database_path = _write_sample_database(tmp_path)
 
-    dashboard_data = load_dashboard_data(_app_config(csv_path))
+    dashboard_data = load_dashboard_data(_app_config(database_path))
 
     assert "player_deaths" in dashboard_data.combat_summary
     assert "enemy_defeats" in dashboard_data.combat_summary
@@ -171,12 +156,12 @@ def test_load_dashboard_data_includes_combat_and_item_summaries(
 
 
 # ---------------------------------------------------------------------------
-# test_load_dashboard_data_rejects_missing_events_file
+# test_load_dashboard_data_rejects_missing_database
 #
-# Verifies that dashboard loading fails clearly when the CSV is missing.
+# Verifies that dashboard loading fails clearly when the database is missing.
 # ---------------------------------------------------------------------------
-def test_load_dashboard_data_rejects_missing_events_file(tmp_path: Path) -> None:
-    missing_path = tmp_path / "missing.csv"
+def test_load_dashboard_data_rejects_missing_database(tmp_path: Path) -> None:
+    missing_path = tmp_path / "missing.sqlite3"
 
-    with pytest.raises(FileNotFoundError, match="Generate sample data"):
+    with pytest.raises(FileNotFoundError, match="storage ingestion"):
         load_dashboard_data(_app_config(missing_path))

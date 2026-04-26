@@ -9,6 +9,7 @@ import pytest
 from playtest_pulse.config import GenerationConfig, ProjectConfig
 from playtest_pulse.domain import TelemetryEvent
 from playtest_pulse.ingestion import generate_sample_events, load_events_csv
+from playtest_pulse.domain import RAW_EVENT_COLUMNS
 
 
 # ---------------------------------------------------------------------------
@@ -18,22 +19,8 @@ from playtest_pulse.ingestion import generate_sample_events, load_events_csv
 # ---------------------------------------------------------------------------
 def _write_rows(tmp_path: Path, rows: list[dict[str, object]]) -> Path:
     csv_path = tmp_path / "events.csv"
-    fieldnames = [
-        "event_id",
-        "player_id",
-        "session_id",
-        "timestamp",
-        "event_type",
-        "level_id",
-        "enemy_type",
-        "item_id",
-        "duration_seconds",
-        "damage_taken",
-        "result",
-    ]
-
     with csv_path.open("w", encoding="utf-8", newline="") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames=RAW_EVENT_COLUMNS)
         writer.writeheader()
         writer.writerows(rows)
 

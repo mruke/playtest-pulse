@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from playtest_pulse.analytics.frame_validation import require_columns
 from playtest_pulse.domain import EventTypes
 
 
@@ -11,7 +12,7 @@ from playtest_pulse.domain import EventTypes
 # Counts item pickup events by item ID.
 # ---------------------------------------------------------------------------
 def calculate_item_pickups(events: pd.DataFrame) -> pd.DataFrame:
-    _require_columns(events, ["event_type", "item_id"])
+    require_columns(events, ["event_type", "item_id"])
 
     pickups = events[events["event_type"] == EventTypes.ITEM_PICKUP]
     pickups = pickups.dropna(subset=["item_id"])
@@ -33,7 +34,7 @@ def calculate_item_pickups(events: pd.DataFrame) -> pd.DataFrame:
 # Counts all item pickup events.
 # ---------------------------------------------------------------------------
 def count_total_item_pickups(events: pd.DataFrame) -> int:
-    _require_columns(events, ["event_type"])
+    require_columns(events, ["event_type"])
 
     return int((events["event_type"] == EventTypes.ITEM_PICKUP).sum())
 
@@ -56,16 +57,3 @@ def get_most_picked_up_item(events: pd.DataFrame) -> str | None:
     ).iloc[0]
 
     return str(most_common_row["item_id"])
-
-
-# ---------------------------------------------------------------------------
-# _require_columns
-#
-# Verifies that the DataFrame contains the columns needed by a metric.
-# ---------------------------------------------------------------------------
-def _require_columns(events: pd.DataFrame, columns: list[str]) -> None:
-    missing_columns = [column for column in columns if column not in events.columns]
-
-    if missing_columns:
-        joined_columns = ", ".join(missing_columns)
-        raise ValueError(f"events DataFrame is missing columns: {joined_columns}")

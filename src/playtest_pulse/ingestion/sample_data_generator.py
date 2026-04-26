@@ -7,6 +7,34 @@ from playtest_pulse.config import GenerationConfig, ProjectConfig
 from playtest_pulse.domain import EventTypes, TelemetryEvent
 
 
+SIMULATION_START_TIME = datetime(2026, 1, 1, 12, 0, 0)
+
+PLAYER_SESSION_OFFSET_MINUTES = 10
+
+MIN_SECONDS_BEFORE_LEVEL_START = 15
+MAX_SECONDS_BEFORE_LEVEL_START = 90
+
+MIN_SECONDS_BEFORE_LEVEL_OUTCOME = 20
+MAX_SECONDS_BEFORE_LEVEL_OUTCOME = 180
+
+MIN_LEVEL_DURATION_SECONDS = 30
+MAX_LEVEL_DURATION_SECONDS = 240
+
+MIN_SECONDS_BEFORE_SESSION_END = 10
+MAX_SECONDS_BEFORE_SESSION_END = 60
+
+MIN_OPTIONAL_EVENTS_PER_LEVEL = 0
+MAX_OPTIONAL_EVENTS_PER_LEVEL = 3
+
+MIN_SECONDS_BETWEEN_OPTIONAL_EVENTS = 5
+MAX_SECONDS_BETWEEN_OPTIONAL_EVENTS = 45
+
+MIN_ENEMY_DAMAGE_TAKEN = 0
+MAX_ENEMY_DAMAGE_TAKEN = 20
+
+MIN_PLAYER_DEATH_DAMAGE_TAKEN = 1
+MAX_PLAYER_DEATH_DAMAGE_TAKEN = 30
+
 LEVEL_OUTCOMES = [
     EventTypes.LEVEL_COMPLETE,
     EventTypes.LEVEL_FAIL,
@@ -45,7 +73,6 @@ def generate_sample_events(
     rng = random.Random(project_config.seed)
     events: list[TelemetryEvent] = []
     event_number = 1
-    start_time = datetime(2026, 1, 1, 12, 0, 0)
 
     for player_number in range(1, generation_config.player_count + 1):
         player_id = _format_id("player", player_number)
@@ -56,8 +83,9 @@ def generate_sample_events(
 
         for session_number in range(1, session_count + 1):
             session_id = f"{player_id}-session-{session_number:03d}"
-            session_start = start_time + timedelta(
-                minutes=(player_number * 10) + session_number,
+            session_start = SIMULATION_START_TIME + timedelta(
+                minutes=(player_number * PLAYER_SESSION_OFFSET_MINUTES)
+                + session_number,
             )
 
             session_events, event_number = _generate_session_events(
@@ -104,7 +132,12 @@ def _generate_session_events(
 
     for level_number in range(1, levels_attempted + 1):
         level_id = _format_id("level", level_number)
-        current_time += timedelta(seconds=rng.randint(15, 90))
+        current_time += timedelta(
+            seconds=rng.randint(
+                MIN_SECONDS_BEFORE_LEVEL_START,
+                MAX_SECONDS_BEFORE_LEVEL_START,
+            )
+        )
 
         events.append(
             _build_event(
@@ -128,7 +161,12 @@ def _generate_session_events(
         )
         events.extend(optional_events)
 
-        current_time += timedelta(seconds=rng.randint(20, 180))
+        current_time += timedelta(
+            seconds=rng.randint(
+                MIN_SECONDS_BEFORE_LEVEL_OUTCOME,
+                MAX_SECONDS_BEFORE_LEVEL_OUTCOME,
+            )
+        )
         outcome = rng.choice(LEVEL_OUTCOMES)
 
         events.append(
@@ -139,7 +177,10 @@ def _generate_session_events(
                 timestamp=current_time,
                 event_type=outcome,
                 level_id=level_id,
-                duration_seconds=rng.randint(30, 240),
+                duration_seconds=rng.randint(
+                    MIN_LEVEL_DURATION_SECONDS,
+                    MAX_LEVEL_DURATION_SECONDS,
+                ),
                 result="success" if outcome == EventTypes.LEVEL_COMPLETE else "failure",
             )
         )
@@ -148,7 +189,12 @@ def _generate_session_events(
         if outcome == EventTypes.LEVEL_FAIL:
             break
 
-    current_time += timedelta(seconds=rng.randint(10, 60))
+    current_time += timedelta(
+        seconds=rng.randint(
+            MIN_SECONDS_BEFORE_SESSION_END,
+            MAX_SECONDS_BEFORE_SESSION_END,
+        )
+    )
     session_duration = int((current_time - session_start).total_seconds())
 
     events.append(
@@ -181,10 +227,18 @@ def _generate_optional_level_events(
 ) -> tuple[list[TelemetryEvent], int, datetime]:
     events: list[TelemetryEvent] = []
 
-    optional_event_count = rng.randint(0, 3)
+    optional_event_count = rng.randint(
+        MIN_OPTIONAL_EVENTS_PER_LEVEL,
+        MAX_OPTIONAL_EVENTS_PER_LEVEL,
+    )
 
     for _ in range(optional_event_count):
-        current_time += timedelta(seconds=rng.randint(5, 45))
+        current_time += timedelta(
+            seconds=rng.randint(
+                MIN_SECONDS_BETWEEN_OPTIONAL_EVENTS,
+                MAX_SECONDS_BETWEEN_OPTIONAL_EVENTS,
+            )
+        )
         event_type = rng.choice(OPTIONAL_EVENT_TYPES)
 
         event = _build_optional_event(
@@ -237,7 +291,10 @@ def _build_optional_event(
             event_type=event_type,
             level_id=level_id,
             enemy_type=rng.choice(ENEMY_TYPES),
-            damage_taken=rng.randint(0, 20),
+            damage_taken=rng.randint(
+                MIN_ENEMY_DAMAGE_TAKEN,
+                MAX_ENEMY_DAMAGE_TAKEN,
+            ),
         )
 
     return _build_event(
@@ -247,7 +304,10 @@ def _build_optional_event(
         timestamp=timestamp,
         event_type=event_type,
         level_id=level_id,
-        damage_taken=rng.randint(1, 30),
+        damage_taken=rng.randint(
+            MIN_PLAYER_DEATH_DAMAGE_TAKEN,
+            MAX_PLAYER_DEATH_DAMAGE_TAKEN,
+        ),
         result="death",
     )
 

@@ -4,33 +4,8 @@ import pandas as pd
 import pytest
 
 from playtest_pulse.analytics.event_frame import events_to_frame
-from playtest_pulse.domain import RAW_EVENT_COLUMNS
-from playtest_pulse.domain import EventTypes, TelemetryEvent
-
-
-# ---------------------------------------------------------------------------
-# _event
-#
-# Builds a valid TelemetryEvent for DataFrame conversion tests.
-# ---------------------------------------------------------------------------
-def _event(
-    event_id: str = "event-001",
-    event_type: str = EventTypes.SESSION_START,
-    timestamp: str = "2026-01-01T12:00:00",
-) -> TelemetryEvent:
-    return TelemetryEvent(
-        event_id=event_id,
-        player_id="player-001",
-        session_id="session-001",
-        timestamp=timestamp,
-        event_type=event_type,
-        level_id="level-001",
-        enemy_type=None,
-        item_id=None,
-        duration_seconds=None,
-        damage_taken=None,
-        result=None,
-    )
+from playtest_pulse.domain import EventTypes, RAW_EVENT_COLUMNS, TelemetryEvent
+from tests.helpers.event_factories import make_event
 
 
 # ---------------------------------------------------------------------------
@@ -39,7 +14,7 @@ def _event(
 # Verifies that valid telemetry events are converted into a pandas DataFrame.
 # ---------------------------------------------------------------------------
 def test_events_to_frame_returns_dataframe() -> None:
-    frame = events_to_frame([_event()])
+    frame = events_to_frame([make_event()])
 
     assert isinstance(frame, pd.DataFrame)
 
@@ -50,7 +25,7 @@ def test_events_to_frame_returns_dataframe() -> None:
 # Verifies that the DataFrame contains the expected raw event columns.
 # ---------------------------------------------------------------------------
 def test_events_to_frame_includes_expected_columns() -> None:
-    frame = events_to_frame([_event()])
+    frame = events_to_frame([make_event()])
 
     assert list(frame.columns) == RAW_EVENT_COLUMNS
 
@@ -62,9 +37,9 @@ def test_events_to_frame_includes_expected_columns() -> None:
 # ---------------------------------------------------------------------------
 def test_events_to_frame_preserves_event_order() -> None:
     events = [
-        _event(event_id="event-001"),
-        _event(event_id="event-002"),
-        _event(event_id="event-003"),
+        make_event(event_id="event-001"),
+        make_event(event_id="event-002"),
+        make_event(event_id="event-003"),
     ]
 
     frame = events_to_frame(events)
@@ -82,7 +57,7 @@ def test_events_to_frame_preserves_event_order() -> None:
 # Verifies that timestamp strings are converted into pandas datetime values.
 # ---------------------------------------------------------------------------
 def test_events_to_frame_parses_timestamp_column() -> None:
-    frame = events_to_frame([_event()])
+    frame = events_to_frame([make_event()])
 
     assert pd.api.types.is_datetime64_any_dtype(frame["timestamp"])
 
@@ -93,11 +68,7 @@ def test_events_to_frame_parses_timestamp_column() -> None:
 # Verifies that optional event values are preserved in the DataFrame.
 # ---------------------------------------------------------------------------
 def test_events_to_frame_preserves_optional_values() -> None:
-    event = TelemetryEvent(
-        event_id="event-001",
-        player_id="player-001",
-        session_id="session-001",
-        timestamp="2026-01-01T12:00:00",
+    event = make_event(
         event_type=EventTypes.ENEMY_DEFEATED,
         level_id="level-001",
         enemy_type="slime",
@@ -143,7 +114,7 @@ def test_events_to_frame_rejects_non_event_values() -> None:
 # Verifies that invalid timestamp values fail during DataFrame conversion.
 # ---------------------------------------------------------------------------
 def test_events_to_frame_rejects_invalid_timestamp() -> None:
-    event = _event(timestamp="not-a-timestamp")
+    event = make_event(timestamp="not-a-timestamp")
 
     with pytest.raises(ValueError):
         events_to_frame([event])

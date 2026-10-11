@@ -8,7 +8,7 @@ The project generates fictional gameplay event data, validates and stores it loc
 
 This project explores how game telemetry can be used to understand player behavior during playtesting.
 
-It focuses on questions such as:
+A dashboard of this type is intended to resolve the following questions for users:
 
 - How long are player sessions?
 - Which levels have the highest failure rate?
@@ -18,10 +18,6 @@ It focuses on questions such as:
 - How many players return for multiple sessions?
 
 ## What This Project Demonstrates
-
-Playtest Pulse is designed as an end-to-end local analytics application.
-
-It demonstrates:
 
 - simulated event-data generation
 - CSV loading and validation
@@ -45,9 +41,7 @@ The first version includes:
 - unit and integration tests
 - architecture documentation and ADRs
 
-## Implementation Steps
-
-The project is built in small, focused steps. Each step leaves the repository in a working state and adds one clear piece of functionality.
+## Feature Implementation Steps
 
 | Step | Focus Area | Goal | Status |
 |---|---|---|---|
@@ -117,8 +111,6 @@ The basic workflow is:
 See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the project architecture, runtime flows, storage design, and glossary.
 
 ## Future Extensions
-
-Possible follow-up work after the first version:
 
 - Evaluate SQLAlchemy if the storage layer grows beyond simple local tables and queries.
 - Explore a PySide6 desktop dashboard if the project becomes more focused on local desktop tooling.
